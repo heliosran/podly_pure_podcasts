@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 
 from podly_core_cli.audio import build_cut_windows, render_without_windows
-from podly_core_cli.config import CoreConfig, load_config
-from podly_core_cli.models import EpisodeInput, Segment, TranscriptArtifact
+from podly_core_cli.config import load_config
+from podly_core_cli.models import EpisodeInput, TranscriptArtifact
 from podly_core_cli.pipeline import ensure_local_audio, process_episode
 from podly_core_cli.providers.classify import AdClassifier
 from podly_core_cli.providers.transcribe import make_transcriber
@@ -71,26 +71,42 @@ def main() -> None:
         segments = transcriber.transcribe(audio_path)
         artifact = TranscriptArtifact(episode_title=args.title, segments=segments)
         Path(args.out).write_text(artifact.model_dump_json(indent=2), encoding="utf-8")
-        print(json.dumps({"transcriber": transcriber.model_name, "segments": len(segments)}))
+        print(
+            json.dumps(
+                {"transcriber": transcriber.model_name, "segments": len(segments)}
+            )
+        )
         return
 
     if args.cmd == "classify":
         payload = json.loads(Path(args.transcript).read_text(encoding="utf-8"))
         transcript = TranscriptArtifact.model_validate(payload)
         classifier = AdClassifier(config)
-        result = classifier.classify(transcript.segments)
-        Path(args.out).write_text(result.model_dump_json(indent=2), encoding="utf-8")
-        print(json.dumps({"model": result.model, "predictions": len(result.predictions)}))
+        classification = classifier.classify(transcript.segments)
+        Path(args.out).write_text(
+            classification.model_dump_json(indent=2), encoding="utf-8"
+        )
+        print(
+            json.dumps(
+                {
+                    "model": classification.model,
+                    "predictions": len(classification.predictions),
+                }
+            )
+        )
         return
 
     if args.cmd == "cut":
-        transcript_payload = json.loads(Path(args.transcript).read_text(encoding="utf-8"))
+        transcript_payload = json.loads(
+            Path(args.transcript).read_text(encoding="utf-8")
+        )
         classification_payload = json.loads(
             Path(args.classification).read_text(encoding="utf-8")
         )
         transcript = TranscriptArtifact.model_validate(transcript_payload)
         ad_indices = {
-            int(p["segment_index"]) for p in classification_payload.get("predictions", [])
+            int(p["segment_index"])
+            for p in classification_payload.get("predictions", [])
         }
         windows = build_cut_windows(
             transcript.segments,

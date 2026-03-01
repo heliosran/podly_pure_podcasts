@@ -17,10 +17,10 @@ disable = [
 [tool.mypy]
 warn_unused_ignores = true
 strict = true
-mypy_path = "src"
+mypy_path = "src:podly_core_repo/src"
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "podly_core_repo/src"]
 
 [tool.black]
 line-length = 88

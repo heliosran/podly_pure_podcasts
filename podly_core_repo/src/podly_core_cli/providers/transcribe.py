@@ -7,7 +7,6 @@ from typing import Any, List
 
 from groq import Groq
 from openai import OpenAI
-
 from podly_core_cli.config import CoreConfig
 from podly_core_cli.models import Segment
 

@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Iterable, List
+from typing import Any, Iterable, List, cast
 
 import litellm
-
 from podly_core_cli.config import CoreConfig
 from podly_core_cli.models import AdPrediction, ClassificationArtifact, Segment
 
@@ -67,8 +66,12 @@ class AdClassifier:
             return []
 
         payload = _parse_json(content)
-        indices = payload.get("ad_segment_indices", [])
-        confidence = float(payload.get("confidence", 1.0))
+        raw_indices = payload.get("ad_segment_indices", [])
+        indices = raw_indices if isinstance(raw_indices, list) else []
+        raw_confidence = payload.get("confidence", 1.0)
+        confidence = (
+            float(raw_confidence) if isinstance(raw_confidence, (int, float)) else 1.0
+        )
         out: List[AdPrediction] = []
         valid = {s.index for s in batch}
         for idx in indices:
@@ -83,10 +86,18 @@ def _batched(items: List[Segment], n: int) -> Iterable[List[Segment]]:
         yield items[i : i + n]
 
 
-def _parse_json(content: str) -> dict:
+def _parse_json(content: str) -> dict[str, object]:
     text = content.strip()
+
     if text.startswith("```"):
-        text = text.strip("`")
-        if text.startswith("json"):
+        lines = text.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+        if text.lower().startswith("json"):
             text = text[4:].strip()
-    return json.loads(text)
+
+    parsed = json.loads(text)
+    return cast(dict[str, object], parsed)

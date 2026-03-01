@@ -5,7 +5,6 @@ import shutil
 from pathlib import Path
 
 import requests
-
 from podly_core_cli.audio import build_cut_windows, render_without_windows
 from podly_core_cli.config import CoreConfig
 from podly_core_cli.models import EpisodeInput, ProcessResult, TranscriptArtifact
@@ -56,6 +55,7 @@ def process_episode(
 
 def ensure_local_audio(audio: str, work_dir: str) -> str:
     if audio.startswith("http://") or audio.startswith("https://"):
+        Path(work_dir).mkdir(parents=True, exist_ok=True)
         out = Path(work_dir) / "input.mp3"
         with requests.get(audio, stream=True, timeout=120) as resp:
             resp.raise_for_status()
@@ -65,5 +65,5 @@ def ensure_local_audio(audio: str, work_dir: str) -> str:
     return audio
 
 
-def write_json(path: str, payload: dict) -> None:
+def write_json(path: str, payload: dict[str, object]) -> None:
     Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")

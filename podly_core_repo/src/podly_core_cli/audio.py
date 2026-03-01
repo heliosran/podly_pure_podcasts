@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List, Tuple
 
 import ffmpeg  # type: ignore[import-untyped]
-
 from podly_core_cli.models import CutWindow, Segment
 
 
@@ -36,7 +35,9 @@ def build_cut_windows(
     return [CutWindow(start_sec=s, end_sec=e) for s, e in merged]
 
 
-def render_without_windows(input_path: str, output_path: str, windows: List[CutWindow]) -> None:
+def render_without_windows(
+    input_path: str, output_path: str, windows: List[CutWindow]
+) -> None:
     duration_ms = _get_audio_duration_ms(input_path)
     if duration_ms is None:
         raise ValueError(f"Unable to get duration for: {input_path}")
@@ -54,7 +55,10 @@ def _get_audio_duration_ms(file_path: str) -> int | None:
 
 
 def _clip_segments_simple(
-    ad_segments_ms: List[Tuple[int, int]], in_path: str, out_path: str, audio_duration_ms: int
+    ad_segments_ms: List[Tuple[int, int]],
+    in_path: str,
+    out_path: str,
+    audio_duration_ms: int,
 ) -> None:
     keep_segments: List[Tuple[int, int]] = []
     last_end = 0
@@ -77,7 +81,11 @@ def _clip_segments_simple(
             (
                 ffmpeg.input(in_path)
                 .output(
-                    str(segment_path), ss=start_sec, t=duration_sec, acodec="libmp3lame", q=2
+                    str(segment_path),
+                    ss=start_sec,
+                    t=duration_sec,
+                    acodec="libmp3lame",
+                    q=2,
                 )
                 .overwrite_output()
                 .run(quiet=True)
