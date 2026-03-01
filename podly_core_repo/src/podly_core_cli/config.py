@@ -7,6 +7,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel
 
 WhisperProvider = Literal["local", "remote", "groq", "test"]
+ClassifierProvider = Literal["litellm", "test"]
 
 
 class CoreConfig(BaseModel):
@@ -16,6 +17,7 @@ class CoreConfig(BaseModel):
     whisper_base_url: str = "https://api.openai.com/v1"
     whisper_language: str = "en"
 
+    classifier_provider: ClassifierProvider = "litellm"
     llm_model: str = "groq/openai/gpt-oss-120b"
     llm_api_key: Optional[str] = None
     openai_base_url: Optional[str] = None

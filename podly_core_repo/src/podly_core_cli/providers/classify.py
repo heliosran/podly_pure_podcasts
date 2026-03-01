@@ -40,6 +40,9 @@ class AdClassifier:
         return ClassificationArtifact(model=self.config.llm_model, predictions=final)
 
     def _classify_batch(self, batch: List[Segment]) -> List[AdPrediction]:
+        if self.config.classifier_provider == "test":
+            return self._classify_batch_test(batch)
+
         user = {
             "segments": [
                 {
@@ -77,6 +80,15 @@ class AdClassifier:
         for idx in indices:
             if isinstance(idx, int) and idx in valid:
                 out.append(AdPrediction(segment_index=idx, confidence=confidence))
+        return out
+
+    @staticmethod
+    def _classify_batch_test(batch: List[Segment]) -> List[AdPrediction]:
+        out: List[AdPrediction] = []
+        for segment in batch:
+            text = segment.text.lower()
+            if any(keyword in text for keyword in ("sponsor", "ad", "advert")):
+                out.append(AdPrediction(segment_index=segment.index, confidence=0.95))
         return out
 
 
